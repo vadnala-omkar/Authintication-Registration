@@ -20,7 +20,11 @@ const userSchema = new mongoose.Schema({
     username:{type: String, required: true, unique: true},
     password:{type:String, required: true}
 })
+
+
 const User = mongoose.model('User', userSchema);
+
+// Registration route to create new user with hashed password
 app.post('/register', async(req, res)=>{
     const {username, password} = req.body;
     try{
@@ -37,6 +41,27 @@ app.post('/register', async(req, res)=>{
     }catch(err){
         console.log('Error registering user:', err);
         res.status(500).json({message: 'Error registering user', error: err});
+    }
+})
+// Login route to authenticate user and return success message if credentials are correct
+app.post('/login', async(req, res)=>{
+    const {username, password}= req.body;
+    try{
+        const user = await User.findOne({username});
+        if(!user){
+            console.log('user not found');
+            return res.status(400).json({message: 'Invalid username or password'});
+        }
+        const ismatch = await bcrypt.compare(password, user.password);
+        if(!ismatch){
+            console.log('Invalid password');
+            return res.status(400).json({messsage: 'Invalid username or password'});
+        }
+        console.log('User logged in successfully');
+        res.status(200).json({message: 'User logged in successfully'});
+    }catch(err){
+        console.log('Error logging in user:', err);
+        res.status(500).json({message: 'Error logging in user', error: err});
     }
 })
 
